@@ -162,9 +162,14 @@ class ActivityFeed extends React.Component {
   }
 
   render() {
+    // const {
+    //   enrollment: { team_members = [] },
+    // } = useContext(FormContext) || { enrollment: {} };
+
     const { showDetails } = this.state;
 
     const { events } = this.props;
+    const { enrollment } = this.props;
 
     let eventsToDisplay = chain(events)
       .sortBy('updated_at')
@@ -173,8 +178,25 @@ class ActivityFeed extends React.Component {
       )
       .value();
 
+    const demandeursEmails = team_members
+      .filter(({ type }) => type === 'demandeur')
+      .map(({ email }) => email);
+
+    const notifyEventsToDisplay = eventsToDisplay.filter(
+      ({ name, user, processed_at }) =>
+        name === 'notify' &&
+        processed_at === null &&
+        demandeursEmails.includes(user.email)
+    );
+
+    // console.log(eventsToDisplay);
+    console.log(notifyEventsToDisplay);
+    // console.log(last(eventsToDisplay));
+
     if (!showDetails && events.length > 0) {
-      eventsToDisplay = [last(eventsToDisplay)];
+      notifyEventsToDisplay.length > 1
+        ? (eventsToDisplay = notifyEventsToDisplay)
+        : (eventsToDisplay = [last(eventsToDisplay)]);
     }
 
     return (
