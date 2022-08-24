@@ -170,7 +170,7 @@ const ActivityFeed = ({ events }) => {
     ({ name, user, processed_at }) =>
       name === 'notify' &&
       processed_at === null &&
-      getDemandeursEmails({ team_members }).include(user.email)
+      getDemandeursEmails({ team_members }).includes(user.email)
   );
 
   if (!showDetails && events.length > 0) {
