@@ -4,7 +4,7 @@ import { FormContext } from '../../../templates/Form';
 
 import moment from 'moment';
 import PropTypes from 'prop-types';
-import { getChangelog } from '../../../../lib';
+import { getChangelog, getDemandeursEmails } from '../../../../lib';
 import Button from '../../../atoms/hyperTexts/Button';
 import CheckCircleIcon from '../../../atoms/icons/check-circle';
 import ErrorIcon from '../../../atoms/icons/error';
@@ -152,89 +152,64 @@ EventItem.defaultProps = {
   diff: {},
 };
 
-class ActivityFeed extends React.Component {
-  constructor(props) {
-    super(props);
+const ActivityFeed = ({ events }) => {
+  const [showDetails, setShowDetails] = useState(false);
 
-    this.state = {
-      showDetails: false,
-    };
+  const {
+    enrollment: { team_members = [] },
+  } = useContext(FormContext) || { enrollment: {} };
+
+  let eventsToDisplay = chain(events)
+    .sortBy('updated_at')
+    .reject(
+      ({ name, diff }) => name === 'update' && isEmpty(getChangelog(diff))
+    )
+    .value();
+
+  const notifyEventsToDisplay = eventsToDisplay.filter(
+    ({ name, user, processed_at }) =>
+      name === 'notify' &&
+      processed_at === null &&
+      getDemandeursEmails({ team_members }).include(user.email)
+  );
+
+  if (!showDetails && events.length > 0) {
+    notifyEventsToDisplay.length > 1
+      ? (eventsToDisplay = notifyEventsToDisplay)
+      : (eventsToDisplay = [last(eventsToDisplay)]);
   }
 
-  render() {
-    // const {
-    //   enrollment: { team_members = [] },
-    // } = useContext(FormContext) || { enrollment: {} };
-
-    const { showDetails } = this.state;
-
-    const { events } = this.props;
-    const { enrollment } = this.props;
-
-    let eventsToDisplay = chain(events)
-      .sortBy('updated_at')
-      .reject(
-        ({ name, diff }) => name === 'update' && isEmpty(getChangelog(diff))
-      )
-      .value();
-
-    const demandeursEmails = team_members
-      .filter(({ type }) => type === 'demandeur')
-      .map(({ email }) => email);
-
-    const notifyEventsToDisplay = eventsToDisplay.filter(
-      ({ name, user, processed_at }) =>
-        name === 'notify' &&
-        processed_at === null &&
-        demandeursEmails.includes(user.email)
-    );
-
-    // console.log(eventsToDisplay);
-    console.log(notifyEventsToDisplay);
-    // console.log(last(eventsToDisplay));
-
-    if (!showDetails && events.length > 0) {
-      notifyEventsToDisplay.length > 1
-        ? (eventsToDisplay = notifyEventsToDisplay)
-        : (eventsToDisplay = [last(eventsToDisplay)]);
-    }
-
-    return (
-      <div>
-        <div className="activity-head">
-          <Button
-            outline
-            icon="eye"
-            onClick={() => this.setState({ showDetails: !showDetails })}
-          >
-            {showDetails ? 'Cacher l’historique' : 'Voir l’historique'}
-          </Button>
-        </div>
-        {eventsToDisplay.map(
-          ({
-            id,
-            comment,
-            name,
-            updated_at,
-            user: { email, given_name, family_name },
-            diff,
-          }) => (
-            <EventItem
-              key={id}
-              comment={comment}
-              name={name}
-              updated_at={updated_at}
-              email={email}
-              family_name={family_name}
-              given_name={given_name}
-              diff={diff}
-            />
-          )
-        )}
+  return (
+    <div>
+      <div className="activity-head">
+        <Button outline icon="eye" onClick={() => setShowDetails(!showDetails)}>
+          {showDetails ? 'Cacher l’historique' : 'Voir l’historique'}
+        </Button>
       </div>
-    );
-  }
-}
+      {eventsToDisplay.map(
+        ({
+          id,
+          comment,
+          name,
+          updated_at,
+          user: { email, given_name, family_name },
+          diff,
+        }) => (
+          <EventItem
+            key={id}
+            comment={comment}
+            name={name}
+            updated_at={updated_at}
+            email={email}
+            family_name={family_name}
+            given_name={given_name}
+            diff={diff}
+          />
+        )
+      )}
+    </div>
+  );
+};
 
 ActivityFeed.propTypes = {
   events: PropTypes.array,
