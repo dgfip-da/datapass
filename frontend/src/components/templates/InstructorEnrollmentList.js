@@ -128,7 +128,7 @@ class InstructorEnrollmentList extends React.Component {
       accessor: 'updated_at',
       headerStyle: {
         ...enrollmentListStyle.header,
-        ...enrollmentListStyle.updateAtHeader,
+        ...enrollmentListStyle.iconHeader,
       },
       style: {
         ...enrollmentListStyle.cell,
@@ -149,23 +149,25 @@ class InstructorEnrollmentList extends React.Component {
     },
     {
       Header: <MailIcon color={'var(--datapass-dark-grey)'} />,
-      accessor: 'count_notify_events_from_demandeurs',
+      accessor: 'notify_events_from_demandeurs_count',
       headerStyle: {
         ...enrollmentListStyle.header,
-        ...enrollmentListStyle.updateAtHeader,
+        ...enrollmentListStyle.iconHeader,
       },
       style: {
         ...enrollmentListStyle.cell,
         ...enrollmentListStyle.centeredCell,
       },
       width: 50,
-      Cell: ({ value: count_notify_events_from_demandeurs }) => {
-        if (this.state.inbox !== 'primary') {
-          return <small>{count_notify_events_from_demandeurs}</small>;
-        }
+      Cell: ({ value: notify_events_from_demandeurs_count }) => {
         return (
-          <Tag type={count_notify_events_from_demandeurs > 0 ? 'warning' : ''}>
-            <span>{count_notify_events_from_demandeurs}</span>
+          <Tag
+            style={{ width: '2rem', padding: '0.25rem 0' }}
+            type={notify_events_from_demandeurs_count > 0 ? 'warning' : ''}
+          >
+            <span style={{ margin: 'auto', textOverflow: 'unset' }}>
+              {notify_events_from_demandeurs_count}
+            </span>
           </Tag>
         );
       },
